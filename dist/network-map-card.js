@@ -3,7 +3,7 @@
  * Sonos / Lutron), a slideshow, and a House view on a floor plan YOU provide (your own image + rooms you draw).
  * Everything is worked out in the browser from device_tracker.* and the device registry: no add-on, no feed.
  * https://github.com/Vansmak/network-map-card */
-const VERSION = "0.3.0";
+const VERSION = "0.3.1";
 
 const ICONS = {"globe": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18\"/>", "wifi": "<path d=\"M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.7 16a5 5 0 0 1 6.6 0\"/><path d=\"M12 19.5v.01\"/>", "link": "<path d=\"M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1\"/><path d=\"M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1\"/>", "term": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M7 9l3 3-3 3M12 15h5\"/>", "tv": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M8 21h8\"/>", "speaker": "<rect x=\"6\" y=\"3\" width=\"12\" height=\"18\" rx=\"2\"/><circle cx=\"12\" cy=\"14\" r=\"3\"/><path d=\"M12 7v.01\"/>", "phone": "<path d=\"M5 4h3.5l1.8 4.5-2.3 1.4a11 11 0 0 0 6.1 6.1l1.4-2.3L20 15.5V19a1.5 1.5 0 0 1-1.6 1.5A16.5 16.5 0 0 1 3.5 5.6 1.5 1.5 0 0 1 5 4z\"/>", "xplay": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M10 8.5v5l4.5-2.5z\"/><path d=\"M8 21h8\"/>", "image": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><circle cx=\"8.5\" cy=\"9.5\" r=\"1.5\"/><path d=\"M21 16l-5-5-9 9\"/>", "cam": "<rect x=\"3\" y=\"7\" width=\"13\" height=\"10\" rx=\"2\"/><path d=\"M16 11l5-3v8l-5-3\"/>", "bot": "<circle cx=\"12\" cy=\"12\" r=\"8\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "temp": "<path d=\"M10 14V5a2 2 0 1 1 4 0v9a4 4 0 1 1-4 0z\"/>", "plug": "<path d=\"M9 2v6M15 2v6M6 8h12v3a6 6 0 0 1-12 0zM12 17v5\"/>", "gauge": "<path d=\"M4 18a8 8 0 1 1 16 0\"/><path d=\"M12 18l4-6\"/>", "bulb": "<path d=\"M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z\"/>", "lock": "<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V8a4 4 0 0 1 8 0v3\"/>", "spark": "<path d=\"M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z\"/><path d=\"M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z\"/>", "more": "<circle cx=\"5\" cy=\"12\" r=\"1.5\"/><circle cx=\"12\" cy=\"12\" r=\"1.5\"/><circle cx=\"19\" cy=\"12\" r=\"1.5\"/>", "x": "<path d=\"M6 6l12 12M18 6L6 18\"/>"};
 const KI = { gateway: "globe", deco: "wifi", ap: "wifi", router: "link", server: "term", pi: "term", tv: "tv", speaker: "speaker", phone: "phone", pc: "term", console: "xplay", printer: "image", cam: "cam", vacuum: "bot", thermostat: "temp", plug: "plug", sensor: "gauge", light: "bulb", lock: "lock", radio: "spark", other: "more" };
@@ -39,7 +39,7 @@ ha-card{padding:10px;overflow:hidden;position:relative}
 .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;padding:2px 4px 6px}.top b{font-size:18px;color:var(--nm-fg)}.top span{color:var(--nm-muted);font-size:12px}
 .wrap{position:relative;display:flex;flex-direction:column}.body{display:flex;gap:10px;min-height:0}
 svg.map{flex:1 1 auto;min-width:0;width:100%;display:block;user-select:none;-webkit-user-select:none}
-svg.map text{font-family:inherit}svg.map [data-act],svg.map [data-nm]{cursor:pointer}svg.house [data-nm]{cursor:grab}svg.house.draw{cursor:crosshair}
+svg.map text{font-family:inherit}svg.map [data-act],svg.map [data-nm]{cursor:pointer}svg.house [data-nm]{cursor:grab}svg.house.draw{cursor:crosshair;touch-action:none}svg.house [data-nm],.side .row{touch-action:none}.body.col{flex-direction:column}.body.col .side{flex:none;max-height:260px}
 .nml{stroke-width:1.4}.nml.hub{stroke-width:2.4}.nml.live{stroke-dasharray:5 7;animation:nmflow 1.6s linear infinite}@keyframes nmflow{to{stroke-dashoffset:-24}}
 .nml.t-zigbee,.nml.t-zwave,.nml.t-lutron,.nml.t-thread{stroke-dasharray:2 6;stroke-linecap:round;stroke-width:1.8}.nml.t-eth{stroke-width:2}.nml.t-sonos{stroke-width:1.8}
 @media (prefers-reduced-motion:reduce){.nml.live{animation:none}}
@@ -80,8 +80,8 @@ class NetworkMapCard extends HTMLElement {
     if (!this._booted) { this._booted = true; this._boot(); }
     else if (Date.now() - this._last > 4000) this._rebuild();
   }
-  connectedCallback() { this._reg_t = setInterval(() => this._loadReg(), 300000); }
-  disconnectedCallback() { clearInterval(this._reg_t); this._showStop(true); }
+  connectedCallback() { this._ro = new ResizeObserver(() => { const n = this.clientWidth > 0 && this.clientWidth < 600; if (n !== this._nar) { this._nar = n; this._html = ""; this._draw(); } }); this._ro.observe(this); this._reg_t = setInterval(() => this._loadReg(), 300000); }
+  disconnectedCallback() { if (this._ro) this._ro.disconnect(); clearInterval(this._reg_t); this._showStop(true); }
 
   /* ---------- data ---------- */
   async _boot() {
@@ -198,7 +198,7 @@ class NetworkMapCard extends HTMLElement {
     const narrow = this.clientWidth && this.clientWidth < 600;
     let nodes = this._nodes;
     const planRooms = this._roomsOn(this._floor);
-    const house = this._view === "house" && !narrow;
+    const house = this._view === "house";
     if (!house) nodes = this._ring(nodes);
     const real = nodes.filter((n) => !n.hub).length;
     const online = nodes.filter((n) => !n.hub && n.s === "on").length, bad = nodes.filter((n) => !n.hub && n.s !== "on" && !n.sl).length;
@@ -234,7 +234,7 @@ class NetworkMapCard extends HTMLElement {
   _map(nodes, by, house, narrow) {
     const kids = (id) => nodes.filter((n) => n.p === id && !n.hub).sort((a, b) => (a.k + a.n).localeCompare(b.k + b.n));
     const hubs = nodes.filter((n) => n.hub && n.k !== "gateway").sort((a, b) => (b.k === "radio") - (a.k === "radio") || (b.main || 0) - (a.main || 0) || a.n.localeCompare(b.n));
-    const focus = this._focus && by[this._focus] ? this._focus : null, C = 500, ln = (x1, y1, x2, y2, n, hub) => this._link(x1, y1, x2, y2, n, by, hub);
+    const focus = this._focus && by[this._focus] ? this._focus : null, SY = narrow && !this._focus && !house ? 1.7 : 1, C = 500, ln = (x1, y1, x2, y2, n, hub) => this._link(x1, y1, x2, y2, n, by, hub);
     let lines = "", dots = "", texts = "", vb = null, side = "", edit = "";
     if (house) ({ lines, dots, texts, vb, side, edit } = this._house(nodes, by));
     else if (focus) {
@@ -249,11 +249,11 @@ class NetworkMapCard extends HTMLElement {
       let a0 = -Math.PI / 2 - Math.PI * 2 * ((groups[0].ks.length + 2) / tot) / 2;
       for (const g of groups) {
         const span = Math.PI * 2 * (g.ks.length + 2) / tot, mid = a0 + span / 2;
-        if (g.h.i !== "gw") pos[g.h.i] = [C + Math.cos(mid) * R1, C + Math.sin(mid) * R1];
+        if (g.h.i !== "gw") pos[g.h.i] = [C + Math.cos(mid) * R1, C + Math.sin(mid) * R1 * SY];
         const [hx, hy] = pos[g.h.i];
         g.ks.forEach((n, i) => {
-          const ang = a0 + span * (i + 1.5) / (g.ks.length + 2), rr = R2 + (g.ks.length > 14 && i % 2 ? 26 : 0), x = C + Math.cos(ang) * rr, y = C + Math.sin(ang) * rr;
-          lines += ln(hx, hy, x, y, n); dots += this._dot(n, x, y, narrow ? 14 : 11);
+          const ang = a0 + span * (i + 1.5) / (g.ks.length + 2), rr = R2 + (g.ks.length > 14 && i % 2 ? 26 : 0), x = C + Math.cos(ang) * rr, y = C + Math.sin(ang) * rr * SY;
+          lines += ln(hx, hy, x, y, n); dots += this._dot(n, x, y, narrow ? 17 : 11);
           if (!narrow) texts += this._label(n, C + Math.cos(ang) * (rr + 17), C + Math.sin(ang) * (rr + 17), ang, 12.5);
         });
         a0 += span;
@@ -262,20 +262,20 @@ class NetworkMapCard extends HTMLElement {
       for (const h of hubs) {
         const [x, y] = pos[h.i], ks = kids(h.i);
         dots += this._dot(h, x, y, 24);
-        texts += `<text x="${x}" y="${y + 40}" text-anchor="middle" font-size="15" class="hubt" data-act="nm" data-nm="${esc(h.i)}">${esc(h.n.replace(/ Deco$/, ""))}</text><text x="${x}" y="${y + 56}" text-anchor="middle" font-size="12" class="hubs">${ks.filter((n) => n.s === "on").length}/${ks.length}${h.main ? " · main" : h.b === "mesh" ? " · wireless" : h.k === "radio" ? " · radio" : h.i === "sonosnet" ? " · wireless mesh" : ""}</text>`;
+        texts += `<text x="${x}" y="${y + 40}" text-anchor="middle" font-size="${narrow ? 24 : 15}" class="hubt" data-act="nm" data-nm="${esc(h.i)}">${esc(h.n.replace(/ Deco$/, ""))}</text><text x="${x}" y="${y + (narrow ? 64 : 56)}" text-anchor="middle" font-size="${narrow ? 20 : 12}" class="hubs">${ks.filter((n) => n.s === "on").length}/${ks.length}${h.main ? " · main" : h.b === "mesh" ? " · wireless" : h.k === "radio" ? " · radio" : h.i === "sonosnet" ? " · wireless mesh" : ""}</text>`;
       }
-      dots += this._dot(by.gw, C, C, 30); texts += `<text x="${C}" y="${C + 48}" text-anchor="middle" font-size="15" class="hubt">${esc(by.gw.n)}</text>`;
-      vb = [-60, -40, 1120, 1080];
+      dots += this._dot(by.gw, C, C, 30); texts += `<text x="${C}" y="${C + 48}" text-anchor="middle" font-size="${narrow ? 24 : 15}" class="hubt">${esc(by.gw.n)}</text>`;
+      vb = SY > 1 ? [-40, C - 430 * SY, 1080, 860 * SY] : [-60, -40, 1120, 1080];
     }
     this._vbox = vb;
     const sel = this._sel && by[this._sel], h = Number(this._cfg.height) || 720;
-    const hasRooms = Object.keys(this._S.plan.rooms).length > 0, can = !narrow;
+    const showSlides = this._cfg.slideshow === true || (this._cfg.slideshow !== false && !narrow);
     const types = ["eth", "wifi", "zigbee", "zwave", "sonos", "lutron", "thread"].filter((t) => ["eth", "wifi", "sonos"].includes(t) || nodes.some((n) => !n.hub && this._ltype(n, by) === t));
     const key = `<span><i class="dot" style="background:var(--nm-ok)"></i>online</span><span><i class="dot" style="background:var(--nm-warn)"></i>gone &lt;24 h</span><span><i class="dot" style="background:var(--nm-bad)"></i>gone 24 h+</span><span><i class="dot" style="background:var(--nm-faint)"></i>asleep</span><span><i class="dot" style="background:#a78bfa"></i>new</span><span><i class="dot" style="background:var(--nm-cool)"></i>needs a name</span>
       <span class="seg">${types.map((t) => `<button class="b${this._links.has(t) ? " on" : ""}" data-act="lt" data-v="${t}"><i class="dot" style="background:${LINK_COL[t]}"></i>${LINK_NAME[t]}</button>`).join("")}</span>
-      ${can ? `<span class="seg"><button class="b${house ? "" : " on"}" data-act="view" data-v="ring">Rings</button><button class="b${house ? " on" : ""}" data-act="view" data-v="house">House</button></span>` : ""}
-      ${this._showT && this._cap ? `<b style="color:var(--nm-fg)">${esc(this._cap)}</b>` : ""}<button class="b${this._showT ? " on" : ""}" data-act="show">${this._showT ? "■ Stop show" : "▶ Slideshow"}</button>`;
-    return `<div class="wrap">${edit}<div class="body"><svg class="map${house ? " house" : ""}${house && this._edit && this._pickArea ? " draw" : ""}" style="height:${h}px" viewBox="${vb.join(" ")}" preserveAspectRatio="xMidYMid meet" data-act="nm" data-nm="">${lines}${dots}${texts}</svg>${side}</div><div class="key">${key}</div>${sel ? this._card(sel, by, house) : ""}</div>`;
+      ${`<span class="seg"><button class="b${house ? "" : " on"}" data-act="view" data-v="ring">Rings</button><button class="b${house ? " on" : ""}" data-act="view" data-v="house">House</button></span>`}
+      ${showSlides ? `${this._showT && this._cap ? `<b style="color:var(--nm-fg)">${esc(this._cap)}</b>` : ""}<button class="b${this._showT ? " on" : ""}" data-act="show">${this._showT ? "■ Stop show" : "▶ Slideshow"}</button>` : ""}`;
+    return `<div class="wrap">${edit}<div class="body${narrow ? " col" : ""}"><svg class="map${house ? " house" : ""}${house && this._edit && this._pickArea ? " draw" : ""}" style="height:${narrow ? "auto" : h + "px"}" viewBox="${vb.join(" ")}" preserveAspectRatio="xMidYMid meet" data-act="nm" data-nm="">${lines}${dots}${texts}</svg>${side}</div><div class="key">${key}</div>${sel ? this._card(sel, by, house) : ""}</div>`;
   }
   _card(sel, by, house) {
     const par = by[sel.p], seen = sel.s === "on" ? "Online now" : sel.ls ? `Last seen ${ago(sel.ls * 1000)}` : "Not seen since tracking started";
@@ -332,12 +332,12 @@ class NetworkMapCard extends HTMLElement {
       let cells = [];
       for (const sp of [64, 52, 42, 34, 28, 22, 18, 15]) {
         cells = [];
-        for (const [x, y, w, h] of r.rects) for (let cy = y + 44; cy <= y + h - 20; cy += sp) for (let cx = x + 24; cx <= x + w - 20; cx += sp) cells.push([cx, cy]);
+        { const m = this._nar ? 1.7 : 1; for (const [x, y, w, h] of r.rects) for (let cy = y + 44 * m; cy <= y + h - 20 * m; cy += sp * m) for (let cx = x + 24 * m; cx <= x + w - 20 * m; cx += sp * m) cells.push([cx, cy]); }
         if (cells.length >= ns.length) break;
       }
       ns.forEach((n, i) => { placed[n.i] = cells.length ? cells[Math.min(cells.length - 1, Math.floor(i * cells.length / ns.length))] : [r.rects[0][0] + 20, r.rects[0][1] + 30]; });
     }
-    const sc = Math.max(W, H) / 1000;
+    const sc = (Math.max(W, H) / 1000) * (this._nar ? 1.7 : 1); // bigger dots + labels on a phone
     let bg = fl.image ? `<image href="${esc(fl.image)}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="none"/>` : `<rect x="0" y="0" width="${W}" height="${H}" fill="color-mix(in srgb,var(--nm-fg) 4%,transparent)" stroke="var(--nm-line)"/>`;
     for (const [id, r] of rooms) { for (const [x, y, w, h] of r.rects) bg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="room" stroke-width="${2 * sc}"/>`; const [x, y] = r.rects[0]; bg += `<text x="${x + 8 * sc}" y="${y + 18 * sc}" class="roomt" font-size="${13 * sc}">${esc(r.name)}</text>`; }
     let lines = "", dots = "";
@@ -454,7 +454,7 @@ class NetworkMapCard extends HTMLElement {
     const hubs = nodes.filter((n) => n.hub && n.k !== "gateway").sort((a, b) => (b.main || 0) - (a.main || 0) || a.n.localeCompare(b.n));
     const run = (v, hs, where, fl) => [...have.map((t) => ({ v, fl, f: null, t: [t], c: `${where} · ${LINK_NAME[t]} only` })), { v, fl, f: null, t: all, c: `${where} · everything` }, ...hs.map((h) => ({ v, fl, f: h.i, t: all, c: `${where} · ${h.n}` }))];
     const st = run("ring", hubs, "Rings", 0);
-    if (this.clientWidth >= 600 && Object.keys(this._S.plan.rooms).length) this._floors().forEach((fl, i) => st.push(...run("house", [], this._floors().length > 1 ? `House · ${fl.name || "floor " + (i + 1)}` : "House", i)));
+    if (Object.keys(this._S.plan.rooms).length) this._floors().forEach((fl, i) => st.push(...run("house", [], this._floors().length > 1 ? `House · ${fl.name || "floor " + (i + 1)}` : "House", i)));
     return st;
   }
   _showStep() {
@@ -465,7 +465,7 @@ class NetworkMapCard extends HTMLElement {
   _showStart() { this._si = -1; this._bak = new Set(this._links); this._showStep(); this._showT = setInterval(() => this._showStep(), 4000); this._html = ""; this._draw(); }
   _showStop(quiet) { if (!this._showT) return; clearInterval(this._showT); this._showT = null; this._cap = ""; this._focus = null; if (this._bak) this._links = this._bak; if (!quiet) { this._html = ""; this._draw(); } }
 }
-customElements.define("network-map-card", NetworkMapCard);
+if (!customElements.get("network-map-card")) customElements.define("network-map-card", NetworkMapCard);
 window.customCards = window.customCards || [];
 window.customCards.push({ type: "network-map-card", name: "Network Map", description: "Live map of every device on your network: rings, zoom, link-type filters, slideshow and a floor-plan view you draw yourself.", preview: false });
 console.info(`%c NETWORK-MAP-CARD %c v${VERSION} `, "background:#3b82f6;color:#fff", "background:#222;color:#fff");

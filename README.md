@@ -8,7 +8,7 @@ A live map of every device on your network for Home Assistant. Nothing to run be
 - **Zoom**: tap any access point or radio and its devices fan out around it, readable at a glance.
 - **Link-type filters**: switch Ethernet, Wi-Fi, Zigbee, Z-Wave, Sonos and Lutron lines on and off in any combination. Ethernet is a solid line, Wi-Fi flows, radios are dotted.
 - **SonosNet**: Sonos speakers that look "wired" (SonosNet is Sonos's own wireless mesh) get a hub of their own.
-- **Slideshow**: one button cycles every link type, everything, then each hub zoomed in. Good for a wall tablet.
+- **Slideshow**: one button cycles every link type, everything, then each hub zoomed in. Good for a wall tablet. It is hidden on phones; set `slideshow: true` / `false` to force it on or off.
 - **House view**: put your devices on **your own floor plan**. You provide the image, you drag boxes over it to mark the rooms (the room list comes from your HA areas), and devices land in their room automatically. Drag a dot to move a device. Optional: write the change back to the HA device's area.
 - **Edit from the map**: tap a device to rename it, mute its "dropped off" alerts, set its room, or hide it. Purple dot = new device, dashed blue ring = "needs a name".
 
@@ -79,6 +79,7 @@ ignore:                      # optional: trackers to leave out
   - device_tracker.some_phone
 radios: [zigbee, zwave, lutron]   # which radios to draw
 sync_areas: false            # true = dropping a device in a room also sets its HA area (admin only)
+slideshow: true              # optional: show / hide the slideshow button (default: desktop only)
 storage_key: network_map     # change if you add a second card with different names/rooms
 ```
 
