@@ -24,15 +24,31 @@ Manual: copy `dist/network-map-card.js` to `/config/www/` and add `/local/networ
 
 ## What it needs from you
 
-The card can only draw what Home Assistant already knows, so you provide the network pieces:
+The card draws what Home Assistant already knows, so to get started you only add the integrations you already use:
 
-1. **A router/tracker integration** that creates `device_tracker` entities with a `mac` or `ip` attribute (TP-Link Deco, UniFi, Fritz!Box, Asus, OpenWrt, Mikrotik, Nmap, Keenetic, …). Each tracked client becomes a dot.
-2. **Your router's name** (`gateway_name`).
-3. **Your access points / mesh nodes**, if you have any. TP-Link Deco is detected automatically. For anything else list them in `hubs` (see below) so clients group under the access point they are connected to.
-4. **Zigbee / Z-Wave / Lutron** are read from the device registry (ZHA, Zigbee2MQTT, Z-Wave JS, Lutron Caséta). Nothing to configure.
-5. **A floor plan**, only for House view: any picture of your home (a sketch, a Roomba map screenshot, a real plan). Save it under `/config/www/` and point `floors[].image` at `/local/<file>`. No image? You still get a plain grid, and Rings works without a plan at all.
+1. **Your router / Wi-Fi system's integration** (anything that creates `device_tracker` entities with a `mac` or `ip`). Every tracked client becomes a dot.
+2. **Zigbee / Z-Wave / Lutron / Thread** come from the device registry (ZHA, Zigbee2MQTT, Z-Wave JS, Lutron Caséta). Nothing to configure.
+3. **Optional**: a `gateway_name`, a floor-plan image for House view, and (only if your integration doesn't say) which access point each device is on.
 
-The room-editing and renaming need an admin user (they read the device and area registries).
+### Which integrations tell the card where a device is connected
+
+The card reads the attributes your integration exposes. It looks for an AP MAC (`ap_mac`, `deco_mac`, `access_point_mac`, `conn_ap_mac`, …) or an AP name (`deco_device`, `ap_name`, `access_point`, …) and groups the client under that access point. Access points are found automatically: any tracker or registry device that clients point to becomes an AP hub.
+
+| Integration | Clients grouped under their access point? | Wired vs Wi-Fi |
+|---|---|---|
+| TP-Link Deco (HACS `tplink_deco`) | Yes (`deco_mac`) | Yes (`connection_type`) |
+| UniFi Network (core) | Yes (`ap_mac`; AP found from its tracker or the device registry) | Wi-Fi when `essid` is present |
+| NETGEAR / Orbi (core) | No: HA only exposes ip / mac / hostname | Not exposed |
+| TP-Link Omada (core) | No: clients don't expose their AP | Not exposed |
+| eero, Fritz!Box, pfSense / OPNsense, Asus, Mikrotik, OpenWrt, Nmap, … | Depends on the integration; not verified | Depends |
+
+I have only tested this against TP-Link Deco on a real network. UniFi is based on reading its source and a simulated setup. If your integration exposes an AP attribute that isn't recognised, open an issue with the attributes from Developer Tools → States and it can be added.
+
+**When the integration doesn't say**, devices hang off your router and you fix them in two taps: open a device, then **Move to an access point** or **Set to Ethernet / Wi-Fi**. The card remembers.
+
+**Floor plan** (House view only): any picture of your home (a sketch, a Roomba map screenshot, a real plan). Save it under `/config/www/` and point `floors[].image` at `/local/<file>`. No image gives a plain grid, and Rings works without a plan.
+
+Editing rooms and writing areas back to HA needs an admin user.
 
 ## Configuration
 
@@ -46,7 +62,7 @@ floors:                      # optional: one entry per floor
     image: /local/floor-down.png
   - name: Upstairs
     image: /local/floor-up.png
-hubs:                        # optional: your access points (Deco is automatic)
+hubs:                        # optional: access points the integration does not reveal (Deco / UniFi are automatic)
   - entity: device_tracker.garage_ap
     name: Garage AP
     wired: true

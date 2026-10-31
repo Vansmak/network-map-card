@@ -3,7 +3,7 @@
  * Sonos / Lutron), a slideshow, and a House view on a floor plan YOU provide (your own image + rooms you draw).
  * Everything is worked out in the browser from device_tracker.* and the device registry: no add-on, no feed.
  * https://github.com/Vansmak/network-map-card */
-const VERSION = "0.1.0";
+const VERSION = "0.2.0";
 
 const ICONS = {"globe": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18\"/>", "wifi": "<path d=\"M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.7 16a5 5 0 0 1 6.6 0\"/><path d=\"M12 19.5v.01\"/>", "link": "<path d=\"M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1\"/><path d=\"M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1\"/>", "term": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M7 9l3 3-3 3M12 15h5\"/>", "tv": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M8 21h8\"/>", "speaker": "<rect x=\"6\" y=\"3\" width=\"12\" height=\"18\" rx=\"2\"/><circle cx=\"12\" cy=\"14\" r=\"3\"/><path d=\"M12 7v.01\"/>", "phone": "<path d=\"M5 4h3.5l1.8 4.5-2.3 1.4a11 11 0 0 0 6.1 6.1l1.4-2.3L20 15.5V19a1.5 1.5 0 0 1-1.6 1.5A16.5 16.5 0 0 1 3.5 5.6 1.5 1.5 0 0 1 5 4z\"/>", "xplay": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M10 8.5v5l4.5-2.5z\"/><path d=\"M8 21h8\"/>", "image": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><circle cx=\"8.5\" cy=\"9.5\" r=\"1.5\"/><path d=\"M21 16l-5-5-9 9\"/>", "cam": "<rect x=\"3\" y=\"7\" width=\"13\" height=\"10\" rx=\"2\"/><path d=\"M16 11l5-3v8l-5-3\"/>", "bot": "<circle cx=\"12\" cy=\"12\" r=\"8\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "temp": "<path d=\"M10 14V5a2 2 0 1 1 4 0v9a4 4 0 1 1-4 0z\"/>", "plug": "<path d=\"M9 2v6M15 2v6M6 8h12v3a6 6 0 0 1-12 0zM12 17v5\"/>", "gauge": "<path d=\"M4 18a8 8 0 1 1 16 0\"/><path d=\"M12 18l4-6\"/>", "bulb": "<path d=\"M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z\"/>", "lock": "<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V8a4 4 0 0 1 8 0v3\"/>", "spark": "<path d=\"M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z\"/><path d=\"M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z\"/>", "more": "<circle cx=\"5\" cy=\"12\" r=\"1.5\"/><circle cx=\"12\" cy=\"12\" r=\"1.5\"/><circle cx=\"19\" cy=\"12\" r=\"1.5\"/>", "x": "<path d=\"M6 6l12 12M18 6L6 18\"/>"};
 const KI = { gateway: "globe", deco: "wifi", ap: "wifi", router: "link", server: "term", pi: "term", tv: "tv", speaker: "speaker", phone: "phone", pc: "term", console: "xplay", printer: "image", cam: "cam", vacuum: "bot", thermostat: "temp", plug: "plug", sensor: "gauge", light: "bulb", lock: "lock", radio: "spark", other: "more" };
@@ -65,7 +65,7 @@ class NetworkMapCard extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this._links = new Set(["eth", "wifi", "sonos"]); this._view = "ring"; this._floor = 0; this._edit = false;
-    this._S = { names: {}, sleep: {}, rooms: {}, pos: {}, known: {}, hidden: {}, plan: { rooms: {} }, baseline: false };
+    this._S = { names: {}, sleep: {}, rooms: {}, pos: {}, known: {}, hidden: {}, plan: { rooms: {} }, conn: {}, parent: {}, baseline: false };
     this._reg = { dev: [], ent: [], area: [] }; this._img = {}; this._last = 0; this._nodes = [];
   }
   static getStubConfig() { return { type: "custom:network-map-card" }; }
@@ -85,7 +85,7 @@ class NetworkMapCard extends HTMLElement {
 
   /* ---------- data ---------- */
   async _boot() {
-    try { const r = await this._hass.callWS({ type: "frontend/get_user_data", key: this._cfg.storage_key }); if (r && r.value) this._S = { ...this._S, ...r.value, plan: { rooms: {}, ...(r.value.plan || {}) } }; } catch (_) { try { Object.assign(this._S, JSON.parse(localStorage.getItem("nm_" + this._cfg.storage_key) || "{}")); } catch (__) { /* */ } }
+    try { const r = await this._hass.callWS({ type: "frontend/get_user_data", key: this._cfg.storage_key }); if (r && r.value) this._S = { ...this._S, ...r.value, plan: { rooms: {}, ...(r.value.plan || {}) }, conn: r.value.conn || {}, parent: r.value.parent || {} }; } catch (_) { try { Object.assign(this._S, JSON.parse(localStorage.getItem("nm_" + this._cfg.storage_key) || "{}")); } catch (__) { /* */ } }
     await this._loadReg(); this._rebuild();
   }
   async _loadReg() {
@@ -113,6 +113,15 @@ class NetworkMapCard extends HTMLElement {
     const trackers = Object.values(st).filter((s) => s.entity_id.startsWith("device_tracker.") && !C.ignore.includes(s.entity_id) && (s.attributes.mac || s.attributes.ip || s.attributes.source_type === "router"));
     const mac = (a) => macNorm(a.mac || a.mac_address || ""), ctOf = (a) => (Array.isArray(a.connection_type) ? a.connection_type[0] : a.connection_type), clean = (x) => String(x || "").replace(/[\u0000-\u001f\u007f]/g, "").trim();
     const hubDef = (s) => C.hubs.find((h) => h.entity === s.entity_id || (h.mac && macNorm(h.mac) === mac(s.attributes)));
+    // integration awareness: whatever the router integration exposes about "which access point is this client on" is used as-is.
+    // Known keys: TP-Link Deco (deco_mac / deco_device), UniFi (ap_mac, essid), others that expose an AP mac or name. Integrations that
+    // expose nothing (NETGEAR/Orbi, Omada, Fritz!Box, pfSense, ...) keep clients on the router; assign an AP per device in the card.
+    const AP_MAC_KEYS = ["ap_mac", "deco_mac", "access_point_mac", "conn_ap_mac", "connected_ap_mac", "parent_mac", "uplink_mac"], AP_NAME_KEYS = ["deco_device", "ap_name", "access_point", "connected_ap", "parent", "ap"];
+    const plat = {}; for (const e of this._reg.ent) plat[e.entity_id] = e.platform;
+    const apRefs = (a) => ({ m: AP_MAC_KEYS.filter((k) => a[k]).map((k) => macNorm(a[k])), nm: AP_NAME_KEYS.filter((k) => typeof a[k] === "string" && a[k]).map((k) => clean(a[k]).toLowerCase()) });
+    const aliasOf = (a) => Object.entries(a).filter(([k, v]) => !AP_MAC_KEYS.includes(k) && /bssid|mac/i.test(k) && typeof v === "string" && /^([0-9a-f]{2}[:-]){5}[0-9a-f]{2}$/i.test(v)).map(([, v]) => macNorm(v));
+    const refd = new Set(); for (const t of trackers) for (const m of apRefs(t.attributes).m) refd.add(m);
+    const isHub = (t) => { const a = t.attributes; return a.device_type === "deco" || a.device_type === "ap" || !!hubDef(t) || (mac(a) && refd.has(mac(a))) || aliasOf(a).some((m) => refd.has(m)); };
     const hubKey = {}; // mac / lowercase name -> hub id
     const mk = (s, extra) => {
       const a = s.attributes, id = mac(a) || s.entity_id; let fn = clean(a.friendly_name || a.host_name || s.entity_id);
@@ -126,20 +135,30 @@ class NetworkMapCard extends HTMLElement {
     };
     for (const s of trackers) { // pass 1: access points / mesh nodes
       const a = s.attributes, def = hubDef(s);
-      if (a.device_type !== "deco" && a.device_type !== "ap" && !def) continue;
+      if (!isHub(s)) continue;
       const n = mk(s, { hub: 1, k: "ap" });
       n.n = clean(n.n).replace(/_/g, " ").replace(/ Deco$/i, ""); if (def && def.name) n.n = def.name; if (S.names[n.i]) n.n = S.names[n.i];
       const ct = ctOf(a); n.b = ct === "wired" || a.is_wired === true || a.wired === true || (def && def.wired) ? "wired" : a.master === true || (def && def.main) ? "wired" : ct ? "mesh" : (def && def.wired === false ? "mesh" : "wired");
       n.p = "gw"; n.nn = false; n.nw = false; n.s = n.s; n.main = (def && def.main) || a.master === true || a.is_main || 0; n._up = macNorm(a.deco_mac || a.ap_mac || "");
+      n.src = plat[s.entity_id] || ""; for (const m of aliasOf(a)) hubKey[m] = n.i;
       nodes.push(n); seen.add(n.i); hubKey[n.i] = n.i; hubKey[String(n.n).toLowerCase()] = n.i; hubKey[clean(a.friendly_name).toLowerCase()] = n.i; hubKey[clean(a.friendly_name).replace(/ Deco$/i, "").toLowerCase()] = n.i;
+    }
+    for (const m of refd) {
+      if (hubKey[m] || !m) continue;
+      const d = this._reg.dev.find((x) => (x.connections || []).some(([t, v]) => t === "mac" && macNorm(v) === m));
+      const n = { i: m, n: S.names[m] || (d && (d.name_by_user || d.name)) || "Access point " + m.slice(-5), k: "ap", hub: 1, s: "on", b: "wired", p: "gw", a: S.rooms[m] || (d && d.area_id) || null, v: (d && d.model) || "", src: "registry" };
+      nodes.push(n); hubKey[m] = m; hubKey[String(n.n).toLowerCase()] = m;
     }
     for (const n of nodes) if (n.hub && n._up && hubKey[n._up] && hubKey[n._up] !== n.i) { n.p = hubKey[n._up]; }
     for (const s of trackers) { // pass 2: clients
       const a = s.attributes, id = mac(a) || s.entity_id;
       if (seen.has(id) || S.hidden[id]) continue; seen.add(id);
-      const ct = ctOf(a), wired = ct === "wired" || a.is_wired === true || a.wired === true;
-      const apRef = macNorm(a.deco_mac || a.ap_mac || a.access_point_mac || "") || String(a.deco_device || a.ap_name || a.access_point || "").toLowerCase();
-      nodes.push(mk(s, { b: wired ? "wired" : typeof ct === "string" && /^band/.test(ct) ? ct : "wifi", p: hubKey[apRef] || "gw" }));
+      const ct = ctOf(a), refs = apRefs(a), ap = refs.m.map((m) => hubKey[m]).find(Boolean) || refs.nm.map((x) => hubKey[x]).find(Boolean);
+      const hasWifi = !!(a.essid || a.ssid || a.radio || a.signal || a.rssi || a.signal_strength || refs.m.length || refs.nm.length);
+      let b = ct === "wired" || a.is_wired === true || a.wired === true ? "wired" : typeof ct === "string" && /^band/.test(ct) ? ct : "wifi";
+      if (S.conn[id]) b = S.conn[id] === "wired" ? "wired" : b === "wired" ? "wifi" : b;
+      const n = mk(s, { b, p: (S.parent[id] && hubKey[S.parent[id]]) || (S.parent[id] === "gw" ? "gw" : ap) || "gw", src: plat[s.entity_id] || "", cu: !hasWifi && b !== "wired" });
+      nodes.push(n);
     }
     // Zigbee / Z-Wave / Lutron / Thread from the device registry
     const entsOf = {}; for (const e of this._reg.ent) if (e.device_id) (entsOf[e.device_id] = entsOf[e.device_id] || []).push(e.entity_id);
@@ -263,14 +282,16 @@ class NetworkMapCard extends HTMLElement {
     const areas = this._areaList(), cur = areas.find((a) => a.id === sel.a);
     return `<div class="card"><div class="h"><b>${esc(sel.n)}</b><button class="x" data-act="nm" data-nm="">✕</button></div>
       <div class="r"><i class="dot" style="background:${this._col(sel)}"></i>${esc(seen)}</div>
-      <div class="grid">${sel.ip ? `<small>IP</small><span>${esc(sel.ip)}</span>` : ""}<small>On</small><span>${esc(par ? par.n : "—")}${BAND[sel.b] ? " · " + BAND[sel.b] : ""}</span>${sel.bt != null ? `<small>Battery</small><span style="color:${sel.bt <= 15 ? "var(--nm-bad)" : sel.bt <= 30 ? "var(--nm-warn)" : "inherit"}">${sel.bt}%</span>` : ""}<small>Type</small><span>${esc(sel.k)}${sel.v ? " · " + esc(sel.v) : ""}</span>${sel.hub || String(sel.i).startsWith("r:") ? "" : `<small>MAC</small><span class="mono">${esc(sel.i)}</span>`}${sel.hub ? "" : `<small>Room</small><span>${esc(cur ? cur.name : "not set")}</span>`}</div>
+      <div class="grid">${sel.ip ? `<small>IP</small><span>${esc(sel.ip)}</span>` : ""}<small>On</small><span>${esc(par ? par.n : "—")}${BAND[sel.b] ? " · " + BAND[sel.b] : ""}</span>${sel.bt != null ? `<small>Battery</small><span style="color:${sel.bt <= 15 ? "var(--nm-bad)" : sel.bt <= 30 ? "var(--nm-warn)" : "inherit"}">${sel.bt}%</span>` : ""}<small>Type</small><span>${esc(sel.k)}${sel.v ? " · " + esc(sel.v) : ""}</span>${sel.src ? `<small>Source</small><span>${esc(sel.src)}</span>` : ""}${sel.hub || String(sel.i).startsWith("r:") ? "" : `<small>MAC</small><span class="mono">${esc(sel.i)}</span>`}${sel.hub ? "" : `<small>Room</small><span>${esc(cur ? cur.name : "not set")}</span>`}</div>
       ${sel.hub ? `<button class="b big" data-act="zoom" data-nm="${esc(sel.i)}">Show its devices</button>` : `<div class="btns">
         <button class="b${sel.sl ? "" : " on"}" data-act="sleep" data-m="${esc(sel.i)}">${sel.sl ? "Alert me if it drops" : "Alerts on · tap to let it sleep"}</button>
         <button class="b${sel.nn ? " on" : ""}" data-act="rename" data-m="${esc(sel.i)}">${sel.nn ? "Give it a name" : "Rename"}</button>
         ${sel.nw ? `<button class="b" data-act="known" data-m="${esc(sel.i)}">I know this one</button>` : ""}
         <button class="b${sel.a ? "" : " on"}" data-act="pick" data-m="${esc(sel.i)}">${sel.a ? "Move to a room" : "Set its room"}</button>
         ${house && this._S.pos[sel.i] ? `<button class="b" data-act="unpos" data-m="${esc(sel.i)}">Auto spot</button>` : ""}
+        ${String(sel.i).startsWith("r:") ? "" : `<button class="b" data-act="conn" data-m="${esc(sel.i)}">${sel.b === "wired" ? "Set to Wi-Fi" : "Set to Ethernet"}</button>${Object.values(by).some((h) => h.hub && h.k === "ap") ? `<button class="b" data-act="pickap" data-m="${esc(sel.i)}">Move to an access point</button>` : ""}`}
         <button class="b" data-act="hide" data-m="${esc(sel.i)}">Hide</button></div>`}
+      ${this._pickAp === sel.i ? `<div class="rooms"><div>${Object.values(by).filter((h) => h.hub && (h.k === "ap" || h.k === "gateway")).map((h) => `<button class="b${sel.p === h.i ? " on" : ""}" data-act="setap" data-m="${esc(sel.i)}" data-v="${esc(h.i)}">${esc(h.n)}</button>`).join("")}</div></div>` : ""}
       ${this._pick === sel.i ? `<div class="rooms"><div>${areas.map((a) => `<button class="b${sel.a === a.id ? " on" : ""}" data-act="room" data-m="${esc(sel.i)}" data-v="${esc(a.id)}">${esc(a.name)}</button>`).join("")}<button class="b" data-act="room" data-m="${esc(sel.i)}" data-v="">Not set</button></div></div>` : ""}</div>`;
   }
   _areaList() {
@@ -353,7 +374,10 @@ class NetworkMapCard extends HTMLElement {
     else if (a === "rename") { const n = this._nodes.find((x) => x.i === id), v = prompt("Name for this device", n ? n.n : ""); if (v && v.trim()) { this._S.names[id] = v.trim().slice(0, 40); this._save(); this._rebuild(); } }
     else if (a === "known") { this._S.known[id] = 1; this._save(); this._rebuild(); }
     else if (a === "hide") { if (confirm("Hide this device from the map?")) { this._S.hidden[id] = 1; this._sel = null; this._save(); this._rebuild(); } }
-    else if (a === "pick") this._pick = this._pick === id ? null : id;
+    else if (a === "pick") { this._pick = this._pick === id ? null : id; this._pickAp = null; }
+    else if (a === "pickap") { this._pickAp = this._pickAp === id ? null : id; this._pick = null; }
+    else if (a === "setap") { this._S.parent[id] = d.v; this._pickAp = null; this._save(); this._rebuild(); }
+    else if (a === "conn") { const n = this._nodes.find((x) => x.i === id); this._S.conn[id] = n && n.b === "wired" ? "wifi" : "wired"; this._save(); this._rebuild(); }
     else if (a === "room") { this._setRoom(id, d.v || null); this._pick = null; }
     else if (a === "unpos") { delete this._S.pos[id]; this._save(); }
     this._html = ""; this._draw();
