@@ -30,6 +30,14 @@ The card draws what Home Assistant already knows, so to get started you only add
 2. **Zigbee / Z-Wave / Lutron / Thread** come from the device registry (ZHA, Zigbee2MQTT, Z-Wave JS, Lutron Caséta). Nothing to configure.
 3. **Optional**: a `gateway_name`, a floor-plan image for House view, and (only if your integration doesn't say) which access point each device is on.
 
+### Everything else (Omada, Sonos, other brands)
+
+- **Nothing is left out.** Any device your router integration tracks shows up as a dot, even when the integration can't say which access point it is on. Those hang off the router until you move them.
+- **Omada / Orbi / others that don't expose the AP:** list your access points once under `hubs` by MAC (a `device_tracker` isn't needed), then open a device and tap **Move to an access point**. The card remembers.
+- **Sonos:** speakers are normal devices (speaker icon, "asleep" by default). The separate **SonosNet** hub only appears when your router reports Sonos speakers as wired, which is how SonosNet (Sonos's own wireless mesh) usually looks to a Deco. Sonos is recognised from the device name or the HA device registry manufacturer, so it works without the Sonos integration.
+- **Device types** (TV, phone, camera, printer, …) come from the device name plus the manufacturer and model in the HA device registry.
+- **Not drawn:** Bluetooth, Matter and Thread links, and anything that isn't a `device_tracker` or a Zigbee / Z-Wave / Lutron device. Ask for it in an issue if you need one.
+
 ### Which integrations tell the card where a device is connected
 
 The card reads the attributes your integration exposes. It looks for an AP MAC (`ap_mac`, `deco_mac`, `access_point_mac`, `conn_ap_mac`, …) or an AP name (`deco_device`, `ap_name`, `access_point`, …) and groups the client under that access point. Access points are found automatically: any tracker or registry device that clients point to becomes an AP hub.

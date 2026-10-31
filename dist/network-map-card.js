@@ -3,7 +3,7 @@
  * Sonos / Lutron), a slideshow, and a House view on a floor plan YOU provide (your own image + rooms you draw).
  * Everything is worked out in the browser from device_tracker.* and the device registry: no add-on, no feed.
  * https://github.com/Vansmak/network-map-card */
-const VERSION = "0.3.1";
+const VERSION = "0.3.2";
 
 const ICONS = {"globe": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18\"/>", "wifi": "<path d=\"M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.7 16a5 5 0 0 1 6.6 0\"/><path d=\"M12 19.5v.01\"/>", "link": "<path d=\"M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1\"/><path d=\"M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1\"/>", "term": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M7 9l3 3-3 3M12 15h5\"/>", "tv": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M8 21h8\"/>", "speaker": "<rect x=\"6\" y=\"3\" width=\"12\" height=\"18\" rx=\"2\"/><circle cx=\"12\" cy=\"14\" r=\"3\"/><path d=\"M12 7v.01\"/>", "phone": "<path d=\"M5 4h3.5l1.8 4.5-2.3 1.4a11 11 0 0 0 6.1 6.1l1.4-2.3L20 15.5V19a1.5 1.5 0 0 1-1.6 1.5A16.5 16.5 0 0 1 3.5 5.6 1.5 1.5 0 0 1 5 4z\"/>", "xplay": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M10 8.5v5l4.5-2.5z\"/><path d=\"M8 21h8\"/>", "image": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><circle cx=\"8.5\" cy=\"9.5\" r=\"1.5\"/><path d=\"M21 16l-5-5-9 9\"/>", "cam": "<rect x=\"3\" y=\"7\" width=\"13\" height=\"10\" rx=\"2\"/><path d=\"M16 11l5-3v8l-5-3\"/>", "bot": "<circle cx=\"12\" cy=\"12\" r=\"8\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "temp": "<path d=\"M10 14V5a2 2 0 1 1 4 0v9a4 4 0 1 1-4 0z\"/>", "plug": "<path d=\"M9 2v6M15 2v6M6 8h12v3a6 6 0 0 1-12 0zM12 17v5\"/>", "gauge": "<path d=\"M4 18a8 8 0 1 1 16 0\"/><path d=\"M12 18l4-6\"/>", "bulb": "<path d=\"M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z\"/>", "lock": "<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V8a4 4 0 0 1 8 0v3\"/>", "spark": "<path d=\"M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z\"/><path d=\"M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z\"/>", "more": "<circle cx=\"5\" cy=\"12\" r=\"1.5\"/><circle cx=\"12\" cy=\"12\" r=\"1.5\"/><circle cx=\"19\" cy=\"12\" r=\"1.5\"/>", "x": "<path d=\"M6 6l12 12M18 6L6 18\"/>"};
 const KI = { gateway: "globe", deco: "wifi", ap: "wifi", router: "link", server: "term", pi: "term", tv: "tv", speaker: "speaker", phone: "phone", pc: "term", console: "xplay", printer: "image", cam: "cam", vacuum: "bot", thermostat: "temp", plug: "plug", sensor: "gauge", light: "bulb", lock: "lock", radio: "spark", other: "more" };
@@ -108,8 +108,8 @@ class NetworkMapCard extends HTMLElement {
     const H = this._hass, S = this._S, C = this._cfg, st = H.states, nodes = [], seen = new Set();
     const gw = { i: "gw", n: C.gateway_name, k: "gateway", hub: 1, s: "on", main: 1, a: S.rooms.gw || null };
     nodes.push(gw);
-    const areaByMac = {}, areaOfDev = {};
-    for (const d of this._reg.dev) { if (d.area_id) areaOfDev[d.id] = d.area_id; for (const [t, v] of d.connections || []) if (t === "mac" && d.area_id) areaByMac[macNorm(v)] = d.area_id; }
+    const areaByMac = {}, areaOfDev = {}, devByMac = {};
+    for (const d of this._reg.dev) { if (d.area_id) areaOfDev[d.id] = d.area_id; for (const [t, v] of d.connections || []) if (t === "mac") { devByMac[macNorm(v)] = d; if (d.area_id) areaByMac[macNorm(v)] = d.area_id; } }
     const trackers = Object.values(st).filter((s) => s.entity_id.startsWith("device_tracker.") && !C.ignore.includes(s.entity_id) && (s.attributes.mac || s.attributes.ip || s.attributes.source_type === "router"));
     const mac = (a) => macNorm(a.mac || a.mac_address || ""), ctOf = (a) => (Array.isArray(a.connection_type) ? a.connection_type[0] : a.connection_type), clean = (x) => String(x || "").replace(/[\u0000-\u001f\u007f]/g, "").trim();
     const hubDef = (s) => C.hubs.find((h) => h.entity === s.entity_id || (h.mac && macNorm(h.mac) === mac(s.attributes)));
@@ -128,10 +128,10 @@ class NetworkMapCard extends HTMLElement {
       if (a.deco_device) fn = fn.replace(new RegExp("^" + clean(a.deco_device).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + " Deco ", "i"), ""); // the Deco integration prefixes clients with their Deco
       const name = S.names[id] || fn;
       const on = s.state === "home" || s.state === "on", ls = Date.parse(s.last_changed) / 1000, ageH = (Date.now() / 1000 - ls) / 3600;
-      const [k, sl0] = kindOf(`${fn} ${a.host_name || ""}`);
+      const rd = devByMac[id], vend = rd ? `${rd.manufacturer || ""} ${rd.model || ""}`.trim() : "", [k, sl0] = kindOf(`${fn} ${a.host_name || ""} ${vend}`);
       const sl = S.sleep[id] != null ? !!S.sleep[id] : sl0;
       const nn = !S.names[id] && /^(android|desktop|esp|wlan|device|host|unknown|lt|phone|galaxy|iphone|ipad)?[-_ ]?[\w-]*\d{2,}[\w-]*$/i.test(String(a.friendly_name || a.host_name || "")) && !/ /.test(String(name));
-      return { i: id, n: String(name), k, ip: a.ip || a.ip_address || null, v: a.vendor || a.manufacturer || "", s: on ? "on" : ageH < 24 ? "day" : "off", ls, sl, nn, nw: !S.known[id], a: S.rooms[id] || areaByMac[id] || null, ...extra };
+      return { i: id, n: String(name), k, ip: a.ip || a.ip_address || null, v: a.vendor || a.manufacturer || vend, s: on ? "on" : ageH < 24 ? "day" : "off", ls, sl, nn, nw: !S.known[id], a: S.rooms[id] || areaByMac[id] || null, ...extra };
     };
     for (const s of trackers) { // pass 1: access points / mesh nodes
       const a = s.attributes, def = hubDef(s);
@@ -142,6 +142,12 @@ class NetworkMapCard extends HTMLElement {
       n.p = "gw"; n.nn = false; n.nw = false; n.s = n.s; n.main = (def && def.main) || a.master === true || a.is_main || 0; n._up = macNorm(a.deco_mac || a.ap_mac || "");
       n.src = plat[s.entity_id] || ""; for (const m of aliasOf(a)) hubKey[m] = n.i;
       nodes.push(n); seen.add(n.i); hubKey[n.i] = n.i; hubKey[String(n.n).toLowerCase()] = n.i; hubKey[clean(a.friendly_name).toLowerCase()] = n.i; hubKey[clean(a.friendly_name).replace(/ Deco$/i, "").toLowerCase()] = n.i;
+    }
+    for (const h of C.hubs) { // access points the user listed by mac that have no device_tracker (Omada, Orbi, ...)
+      const m = h.mac ? macNorm(h.mac) : "";
+      if (!m || hubKey[m] || nodes.some((n) => n.hub && h.entity && n.i === h.entity)) continue;
+      const d = devByMac[m], n = { i: m, n: S.names[m] || h.name || (d && (d.name_by_user || d.name)) || "Access point " + m.slice(-5), k: "ap", hub: 1, s: "on", b: h.wired === false ? "mesh" : "wired", p: "gw", main: h.main ? 1 : 0, a: S.rooms[m] || (d && d.area_id) || null, v: (d && d.model) || "", src: "config" };
+      nodes.push(n); hubKey[m] = m; hubKey[String(n.n).toLowerCase()] = m; refd.add(m);
     }
     for (const m of refd) {
       if (hubKey[m] || !m) continue;
@@ -185,12 +191,12 @@ class NetworkMapCard extends HTMLElement {
 
   /* rings view: wired-looking Sonos speakers get a SonosNet hub of their own (SonosNet = Sonos's own wireless mesh) */
   _ring(nodes) {
-    const sn = (n) => !n.hub && n.k === "speaker" && n.b === "wired" && /sonos/i.test(n.n);
+    const sn = (n) => !n.hub && n.k === "speaker" && n.b === "wired" && /sonos/i.test(n.n + " " + (n.v || ""));
     if (!nodes.some(sn)) return nodes;
     return [...nodes.map((n) => (sn(n) ? { ...n, p: "sonosnet" } : n)), { i: "sonosnet", n: "SonosNet", k: "speaker", hub: 1, s: "on", b: "sonos", p: "gw" }];
   }
   _col(n) { return n.nw ? "#a78bfa" : n.s === "on" ? "var(--nm-ok)" : n.sl ? "var(--nm-faint)" : n.s === "day" ? "var(--nm-warn)" : "var(--nm-bad)"; }
-  _ltype(n, by) { const b = n.k === "radio" ? n.i : n.b === "sonos" ? "sonos" : n.b || (by[n.p] || {}).b || ""; return b === "wired" ? (n.k === "speaker" && /sonos/i.test(n.n) ? "sonos" : "eth") : ["zigbee", "zwave", "lutron", "thread", "sonos"].includes(b) ? b : "wifi"; }
+  _ltype(n, by) { const b = n.k === "radio" ? n.i : n.b === "sonos" ? "sonos" : n.b || (by[n.p] || {}).b || ""; return b === "wired" ? (n.k === "speaker" && /sonos/i.test(n.n + " " + (n.v || "")) ? "sonos" : "eth") : ["zigbee", "zwave", "lutron", "thread", "sonos"].includes(b) ? b : "wifi"; }
 
   /* ---------- render ---------- */
   _draw() {
