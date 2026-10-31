@@ -3,7 +3,7 @@
  * Sonos / Lutron), a slideshow, and a House view on a floor plan YOU provide (your own image + rooms you draw).
  * Everything is worked out in the browser from device_tracker.* and the device registry: no add-on, no feed.
  * https://github.com/Vansmak/network-map-card */
-const VERSION = "0.3.3";
+const VERSION = "0.4.0";
 
 const ICONS = {"globe": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18\"/>", "wifi": "<path d=\"M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.7 16a5 5 0 0 1 6.6 0\"/><path d=\"M12 19.5v.01\"/>", "link": "<path d=\"M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1\"/><path d=\"M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1\"/>", "term": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M7 9l3 3-3 3M12 15h5\"/>", "tv": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M8 21h8\"/>", "speaker": "<rect x=\"6\" y=\"3\" width=\"12\" height=\"18\" rx=\"2\"/><circle cx=\"12\" cy=\"14\" r=\"3\"/><path d=\"M12 7v.01\"/>", "phone": "<path d=\"M5 4h3.5l1.8 4.5-2.3 1.4a11 11 0 0 0 6.1 6.1l1.4-2.3L20 15.5V19a1.5 1.5 0 0 1-1.6 1.5A16.5 16.5 0 0 1 3.5 5.6 1.5 1.5 0 0 1 5 4z\"/>", "xplay": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M10 8.5v5l4.5-2.5z\"/><path d=\"M8 21h8\"/>", "image": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><circle cx=\"8.5\" cy=\"9.5\" r=\"1.5\"/><path d=\"M21 16l-5-5-9 9\"/>", "cam": "<rect x=\"3\" y=\"7\" width=\"13\" height=\"10\" rx=\"2\"/><path d=\"M16 11l5-3v8l-5-3\"/>", "bot": "<circle cx=\"12\" cy=\"12\" r=\"8\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "temp": "<path d=\"M10 14V5a2 2 0 1 1 4 0v9a4 4 0 1 1-4 0z\"/>", "plug": "<path d=\"M9 2v6M15 2v6M6 8h12v3a6 6 0 0 1-12 0zM12 17v5\"/>", "gauge": "<path d=\"M4 18a8 8 0 1 1 16 0\"/><path d=\"M12 18l4-6\"/>", "bulb": "<path d=\"M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z\"/>", "lock": "<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V8a4 4 0 0 1 8 0v3\"/>", "spark": "<path d=\"M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z\"/><path d=\"M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z\"/>", "more": "<circle cx=\"5\" cy=\"12\" r=\"1.5\"/><circle cx=\"12\" cy=\"12\" r=\"1.5\"/><circle cx=\"19\" cy=\"12\" r=\"1.5\"/>", "x": "<path d=\"M6 6l12 12M18 6L6 18\"/>"};
 const KI = { gateway: "globe", deco: "wifi", ap: "wifi", router: "link", server: "term", pi: "term", tv: "tv", speaker: "speaker", phone: "phone", pc: "term", console: "xplay", printer: "image", cam: "cam", vacuum: "bot", thermostat: "temp", plug: "plug", sensor: "gauge", light: "bulb", lock: "lock", radio: "spark", other: "more" };
@@ -34,7 +34,7 @@ const kindOf = (name) => { for (const [k, rx, sl] of KINDS) if (rx.test(name || 
 const CSS = `
 :host{display:block;--nm-fg:var(--primary-text-color,#e5e7eb);--nm-muted:var(--secondary-text-color,#9ca3af);--nm-faint:color-mix(in srgb,var(--nm-muted) 55%,transparent);
   --nm-panel:var(--ha-card-background,var(--card-background-color,#1b2337));--nm-panel2:var(--secondary-background-color,#222b42);--nm-line:var(--divider-color,#374151);
-  --nm-ok:var(--success-color,#34d399);--nm-warn:var(--warning-color,#f59e0b);--nm-bad:var(--error-color,#f87171);--nm-cool:var(--info-color,#60a5fa);font-family:var(--paper-font-body1_-_font-family,system-ui,sans-serif)}
+  --nm-ok:var(--success-color,#34d399);--nm-warn:var(--warning-color,#f59e0b);--nm-bad:var(--error-color,#f87171);--nm-cool:var(--info-color,#60a5fa);--nm-holo:var(--network-map-holo-color,#22d3ee);font-family:var(--paper-font-body1_-_font-family,system-ui,sans-serif)}
 ha-card{padding:10px;overflow:hidden;position:relative}
 .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;padding:2px 4px 6px}.top b{font-size:18px;color:var(--nm-fg)}.top span{color:var(--nm-muted);font-size:12px}
 .wrap{position:relative;display:flex;flex-direction:column}.body{display:flex;gap:10px;min-height:0}
@@ -56,6 +56,14 @@ svg.map text{font-family:inherit}svg.map [data-act],svg.map [data-nm]{cursor:poi
 .side .row{display:flex;align-items:center;gap:6px;padding:3px 2px;cursor:grab;touch-action:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.side .row svg{width:14px;height:14px;flex:none}
 .edit{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 4px;font-size:12px;color:var(--nm-muted)}.edit select{background:var(--nm-panel2);color:var(--nm-fg);border:1px solid var(--nm-line);border-radius:8px;padding:4px 6px}
 .room{fill:color-mix(in srgb,var(--nm-cool) 7%,transparent);stroke:color-mix(in srgb,var(--nm-fg) 55%,transparent);stroke-width:2}.roomt{fill:var(--nm-fg);font-size:13px;font-weight:600;paint-order:stroke;stroke:var(--nm-panel);stroke-width:4px}
+svg.holo{background:radial-gradient(ellipse at 50% 42%,color-mix(in srgb,var(--nm-holo) 14%,transparent),transparent 72%)}
+.hplane{fill:color-mix(in srgb,var(--nm-holo) 5%,transparent);stroke:color-mix(in srgb,var(--nm-holo) 70%,transparent);stroke-width:1.5}
+.hfloor{fill:color-mix(in srgb,var(--nm-holo) 16%,transparent);stroke:none}
+.hwall{stroke:var(--nm-holo);stroke-opacity:.85;stroke-width:1.4;stroke-linejoin:round}
+.hwall.back{fill:color-mix(in srgb,var(--nm-holo) 14%,transparent)}.hwall.front{fill:color-mix(in srgb,var(--nm-holo) 4%,transparent);stroke-opacity:.4}
+.hedge{fill:none;stroke:var(--nm-holo);stroke-width:2.2;stroke-linejoin:round;filter:drop-shadow(0 0 5px var(--nm-holo))}
+.hstem{stroke-width:1.6;stroke-dasharray:3 3}
+.hlab{fill:var(--nm-holo);font-weight:700;letter-spacing:.12em;text-transform:uppercase;paint-order:stroke;stroke:#05121a;stroke-width:3.5px;pointer-events:none}
 .ghost{fill:color-mix(in srgb,var(--nm-ok) 35%,transparent);stroke:var(--nm-ok);stroke-width:2;pointer-events:none}.empty{padding:40px;text-align:center;color:var(--nm-muted)}
 .hubt{fill:var(--nm-fg);font-weight:600;paint-order:stroke;stroke:var(--nm-panel);stroke-width:4px;stroke-linejoin:round}.hubs{fill:var(--nm-muted);font-weight:400}
 `;
@@ -224,10 +232,12 @@ class NetworkMapCard extends HTMLElement {
     const svg = r.querySelector("svg.house.draw"); if (svg) svg.addEventListener("pointerdown", (ev) => this._drawRoom(ev, svg));
   }
   _vb() { return this._vbox || [-60, -40, 1120, 1080]; }
-  _link(x1, y1, x2, y2, n, by, hub) {
+  _link(x1, y1, x2, y2, n, by, hub, curve) {
     const lt = this._ltype(n, by);
     if (!this._links.has(lt) && !(this._focus && (this._focus === n.p || this._focus === n.i))) return "";
-    return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" class="nml t-${lt}${n.s === "on" && lt === "wifi" ? " live" : ""}${hub ? " hub" : ""}" stroke="${n.s === "on" ? (hub ? LINK_COL[lt] : `color-mix(in srgb,${LINK_COL[lt]} 70%,transparent)`) : "var(--nm-line)"}"/>`;
+    const cls = `nml t-${lt}${n.s === "on" && lt === "wifi" ? " live" : ""}${hub ? " hub" : ""}`, col = n.s === "on" ? (hub ? LINK_COL[lt] : `color-mix(in srgb,${LINK_COL[lt]} 70%,transparent)`) : "var(--nm-line)";
+    if (curve) return `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}Q${((x1 + x2) / 2).toFixed(1)} ${(Math.min(y1, y2) - curve).toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" class="${cls}" stroke="${col}"/>`;
+    return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" class="${cls}" stroke="${col}"/>`;
   }
   _dot(n, x, y, r, extra = "") {
     const c = this._col(n);
@@ -242,7 +252,7 @@ class NetworkMapCard extends HTMLElement {
     const hubs = nodes.filter((n) => n.hub && n.k !== "gateway").sort((a, b) => (b.k === "radio") - (a.k === "radio") || (b.main || 0) - (a.main || 0) || a.n.localeCompare(b.n));
     const focus = this._focus && by[this._focus] ? this._focus : null, SY = narrow && !this._focus && !house ? 1.7 : 1, C = 500, ln = (x1, y1, x2, y2, n, hub) => this._link(x1, y1, x2, y2, n, by, hub);
     let lines = "", dots = "", texts = "", vb = null, side = "", edit = "";
-    if (house) ({ lines, dots, texts, vb, side, edit } = this._house(nodes, by));
+    let holo = false; if (house) ({ lines, dots, texts, vb, side, edit, holo } = this._house(nodes, by));
     else if (focus) {
       const h = by[focus], ks = kids(focus), R = 300, fs = narrow ? 30 : 22, r = narrow ? 22 : 17;
       ks.forEach((n, i) => { const ang = -Math.PI / 2 + (i / Math.max(1, ks.length)) * Math.PI * 2, x = C + Math.cos(ang) * R, y = C + Math.sin(ang) * R; lines += ln(C, C, x, y, n); dots += this._dot(n, x, y, r); texts += this._label(n, C + Math.cos(ang) * (R + r + 8), C + Math.sin(ang) * (R + r + 8), ang, fs); });
@@ -281,7 +291,7 @@ class NetworkMapCard extends HTMLElement {
       <span class="seg">${types.map((t) => `<button class="b${this._links.has(t) ? " on" : ""}" data-act="lt" data-v="${t}"><i class="dot" style="background:${LINK_COL[t]}"></i>${LINK_NAME[t]}</button>`).join("")}</span>
       ${`<span class="seg"><button class="b${house ? "" : " on"}" data-act="view" data-v="ring">Rings</button><button class="b${house ? " on" : ""}" data-act="view" data-v="house">House</button></span>`}
       ${showSlides ? `${this._showT && this._cap ? `<b style="color:var(--nm-fg)">${esc(this._cap)}</b>` : ""}<button class="b${this._showT ? " on" : ""}" data-act="show">${this._showT ? "■ Stop show" : "▶ Slideshow"}</button>` : ""}`;
-    return `<div class="wrap">${edit}<div class="body${narrow ? " col" : ""}"><svg class="map${house ? " house" : ""}${house && this._edit && this._pickArea ? " draw" : ""}" style="height:${narrow ? "auto" : h + "px"}" viewBox="${vb.join(" ")}" preserveAspectRatio="xMidYMid meet" data-act="nm" data-nm="">${lines}${dots}${texts}</svg>${side}</div><div class="key">${key}</div>${sel ? this._card(sel, by, house) : ""}</div>`;
+    return `<div class="wrap">${edit}<div class="body${narrow ? " col" : ""}"><svg class="map${house ? " house" : ""}${holo ? " holo" : ""}${house && this._edit && this._pickArea ? " draw" : ""}" style="height:${narrow ? "auto" : h + "px"}" viewBox="${vb.join(" ")}" preserveAspectRatio="xMidYMid meet" data-act="nm" data-nm="">${lines}${dots}${texts}</svg>${side}</div><div class="key">${key}</div>${sel ? this._card(sel, by, house) : ""}</div>`;
   }
   _card(sel, by, house) {
     const par = by[sel.p], seen = sel.s === "on" ? "Online now" : sel.ls ? `Last seen ${ago(sel.ls * 1000)}` : "Not seen since tracking started";
@@ -319,30 +329,15 @@ class NetworkMapCard extends HTMLElement {
   _house(nodes, by) {
     const f = this._floor, [W, H] = this._dims(f), fl = this._floorCfg(f), rooms = this._roomsOn(f), S = this._S;
     const tabs = this._floors().length > 1 ? `<span class="seg">${this._floors().map((x, i) => `<button class="b${i === f ? " on" : ""}" data-act="floor" data-v="${i}">${esc(x.name || "Floor " + (i + 1))}</button>`).join("")}</span>` : "";
-    const edit = `<div class="edit">${tabs}<button class="b${this._edit ? " on" : ""}" data-act="edit">${this._edit ? "Done editing rooms" : "Edit rooms"}</button>${this._edit ? `${this._hass.user && this._hass.user.is_admin ? `<button class="b${this._syncOn() ? " on" : ""}" data-act="sync" title="When you drop a device in a room, also set that room as the device's area in Home Assistant">Update HA areas: ${this._syncOn() ? "on" : "off"}</button>` : ""}<button class="b" data-act="img">${fl.image ? "Change floor plan image" : "Add a floor plan image"}</button>${fl.image ? `<button class="b" data-act="noimg">Remove image</button>` : ""}<button class="b" data-act="addfloor">Add a floor</button>${this._areaPicker(f)}<span>${this._pickArea ? "Drag a box on the map for this room (repeat for L-shaped rooms)." : "Pick a room, then drag a box on the map."}</span>${rooms.map(([id, r]) => `<button class="b" data-act="delroom" data-v="${esc(id)}" title="Remove this room from the plan">${esc(r.name)} ✕</button>`).join("")}` : !rooms.length ? `<span>${fl.image ? "No rooms on this floor yet." : "No floor plan yet."} Click “Edit rooms”, add a picture of your home (a photo, sketch or screenshot), then pick a room and drag a box over it.</span>` : ""}</div>`;
+    const isoOn = this._S.iso !== false, view3d = this._edit ? "" : `<span class="seg"><button class="b${isoOn ? " on" : ""}" data-act="iso" data-v="1">3D</button><button class="b${isoOn ? "" : " on"}" data-act="iso" data-v="0">Flat</button></span>`;
+    const edit = `<div class="edit">${tabs}${view3d}<button class="b${this._edit ? " on" : ""}" data-act="edit">${this._edit ? "Done editing rooms" : "Edit rooms"}</button>${this._edit ? `${this._hass.user && this._hass.user.is_admin ? `<button class="b${this._syncOn() ? " on" : ""}" data-act="sync" title="When you drop a device in a room, also set that room as the device's area in Home Assistant">Update HA areas: ${this._syncOn() ? "on" : "off"}</button>` : ""}<button class="b" data-act="img">${fl.image ? "Change floor plan image" : "Add a floor plan image"}</button>${fl.image ? `<button class="b" data-act="noimg">Remove image</button>` : ""}<button class="b" data-act="addfloor">Add a floor</button>${this._areaPicker(f)}<span>${this._pickArea ? "Drag a box on the map for this room (repeat for L-shaped rooms)." : "Pick a room, then drag a box on the map."}</span>${rooms.map(([id, r]) => `<button class="b" data-act="delroom" data-v="${esc(id)}" title="Remove this room from the plan">${esc(r.name)} ✕</button>`).join("")}` : !rooms.length ? `<span>${fl.image ? "No rooms on this floor yet." : "No floor plan yet."} Click “Edit rooms”, add a picture of your home (a photo, sketch or screenshot), then pick a room and drag a box over it.</span>` : ""}</div>`;
     const inRoom = (x, y) => { const h = rooms.find(([, r]) => r.rects.some(([rx, ry, w, hh]) => x >= rx && x <= rx + w && y >= ry && y <= ry + hh)); return h ? h[0] : null; };
     this._roomAt = inRoom; this._pdims = [W, H];
-    const placed = {}, tray = [];
     const toPlace = nodes.filter((n) => !(n.hub && n.k === "radio"));
-    for (const n of toPlace) {
-      const p = S.pos[n.i];
-      if (p && (p[2] || 0) === f) placed[n.i] = [p[0], p[1]];
-      else if (p) continue; // pinned on another floor
-      else if (n.a && rooms.some(([id]) => id === n.a)) continue; // auto spot below
-      else if (n.a && this._roomsOnAny(n.a)) continue; // its room is on another floor
-      else tray.push(n);
-    }
-    for (const [id, r] of rooms) {
-      const ns = toPlace.filter((n) => !placed[n.i] && n.a === id && !(S.pos[n.i] && (S.pos[n.i][2] || 0) !== f)).sort((a, b) => (b.hub ? 1 : 0) - (a.hub ? 1 : 0) || (a.k + a.n).localeCompare(b.k + b.n));
-      if (!ns.length) continue;
-      let cells = [];
-      for (const sp of [64, 52, 42, 34, 28, 22, 18, 15]) {
-        cells = [];
-        { const m = this._nar ? 1.7 : 1; for (const [x, y, w, h] of r.rects) for (let cy = y + 44 * m; cy <= y + h - 20 * m; cy += sp * m) for (let cx = x + 24 * m; cx <= x + w - 20 * m; cx += sp * m) cells.push([cx, cy]); }
-        if (cells.length >= ns.length) break;
-      }
-      ns.forEach((n, i) => { placed[n.i] = cells.length ? cells[Math.min(cells.length - 1, Math.floor(i * cells.length / ns.length))] : [r.rects[0][0] + 20, r.rects[0][1] + 30]; });
-    }
+    const { placed, tray } = this._layout(f, toPlace);
+    const iso = this._S.iso !== false && !this._edit;
+    this._inv = null;
+    if (iso) return this._houseIso(by, toPlace, edit, tray, icon);
     const sc = (Math.max(W, H) / 1000) * (this._nar ? 1.7 : 1); // bigger dots + labels on a phone
     let bg = fl.image ? `<image href="${esc(fl.image)}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="none"/>` : `<rect x="0" y="0" width="${W}" height="${H}" fill="color-mix(in srgb,var(--nm-fg) 4%,transparent)" stroke="var(--nm-line)"/>`;
     for (const [id, r] of rooms) { for (const [x, y, w, h] of r.rects) bg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="room" stroke-width="${2 * sc}"/>`; const [x, y] = r.rects[0]; bg += `<text x="${x + 8 * sc}" y="${y + 18 * sc}" class="roomt" font-size="${13 * sc}">${esc(r.name)}</text>`; }
@@ -372,6 +367,73 @@ class NetworkMapCard extends HTMLElement {
     };
     inp.click();
   }
+  _layout(f, toPlace) { // where each device sits on floor f: pinned by drag, else a grid inside its room; the rest go to the tray
+    const S = this._S, rooms = this._roomsOn(f), placed = {}, tray = [];
+    for (const n of toPlace) {
+      const p = S.pos[n.i];
+      if (p && (p[2] || 0) === f) placed[n.i] = [p[0], p[1]];
+      else if (p) continue; // pinned on another floor
+      else if (n.a && rooms.some(([id]) => id === n.a)) continue; // auto spot below
+      else if (n.a && this._roomsOnAny(n.a)) continue; // its room is on another floor
+      else tray.push(n);
+    }
+    for (const [id, r] of rooms) {
+      const ns = toPlace.filter((n) => !placed[n.i] && n.a === id && !(S.pos[n.i] && (S.pos[n.i][2] || 0) !== f)).sort((a, b) => (b.hub ? 1 : 0) - (a.hub ? 1 : 0) || (a.k + a.n).localeCompare(b.k + b.n));
+      if (!ns.length) continue;
+      let cells = [];
+      for (const sp of [64, 52, 42, 34, 28, 22, 18, 15]) {
+        cells = [];
+        { const m = this._nar ? 1.7 : 1; for (const [x, y, w, h] of r.rects) for (let cy = y + 44 * m; cy <= y + h - 20 * m; cy += sp * m) for (let cx = x + 24 * m; cx <= x + w - 20 * m; cx += sp * m) cells.push([cx, cy]); }
+        if (cells.length >= ns.length) break;
+      }
+      ns.forEach((n, i) => { placed[n.i] = cells.length ? cells[Math.min(cells.length - 1, Math.floor(i * cells.length / ns.length))] : [r.rects[0][0] + 20, r.rects[0][1] + 30]; });
+    }
+    return { placed, tray };
+  }
+  /* 3D hologram view: every floor drawn isometrically as a glowing wireframe slab, floors stacked, devices floating above their spot */
+  _houseIso(by, toPlace, edit, tray, icon) {
+    const F = this._floors(), K = 0.866, WH = 100, GAP = 170, f0 = this._floor, zOf = (i) => i * (WH + GAP);
+    const iso = (x, y, z) => [(x - y) * K, (x + y) * 0.5 - z], f1 = (n) => n.toFixed(1);
+    const dims = F.map((_, i) => this._dims(i)), L = F.map((_, i) => this._layout(i, toPlace));
+    const sc = (Math.max(...dims.flat()) / 1000) * (this._nar ? 1.7 : 1), STEM = 30 * sc;
+    this._pdims = [Math.max(...dims.map((d) => d[0])), Math.max(...dims.map((d) => d[1]))];
+    this._inv = (p) => { const z = zOf(f0) + STEM, u = p.x / K, v = 2 * (p.y + z); return { x: (u + v) / 2, y: (v - u) / 2 }; };
+    let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
+    const grow = ([x, y]) => { minx = Math.min(minx, x); maxx = Math.max(maxx, x); miny = Math.min(miny, y); maxy = Math.max(maxy, y); };
+    F.forEach((_, i) => { const [W, H] = dims[i], z = zOf(i); for (const [x, y] of [[0, 0], [W, 0], [W, H], [0, H]]) { grow(iso(x, y, z)); grow(iso(x, y, z + WH + 40)); } });
+    const pos = {}; L.forEach((l, i) => { for (const [id, p] of Object.entries(l.placed)) pos[id] = { f: i, x: p[0], y: p[1] }; });
+    const top = (id) => { const q = pos[id]; return q ? iso(q.x, q.y, zOf(q.f) + STEM) : null; };
+    let geo = `<defs><pattern id="nmg" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M50 0H0V50" fill="none" stroke="var(--nm-holo)" stroke-opacity=".28" stroke-width="1"/></pattern></defs>`, labels = "", devs = "", links = "";
+    F.forEach((fl, i) => {
+      const [W, H] = dims[i], z = zOf(i), act = i === f0 ? 1 : 0.32, T = `matrix(${K} .5 ${-K} .5 0 ${-z})`;
+      geo += `<g opacity="${act}"><g transform="${T}">${fl.image ? `<image href="${esc(fl.image)}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="none" opacity=".45"/>` : ""}<rect x="0" y="0" width="${W}" height="${H}" class="hplane"/><rect x="0" y="0" width="${W}" height="${H}" fill="url(#nmg)"/></g>`;
+      const rects = []; for (const [id, r] of this._roomsOn(i)) r.rects.forEach((q, k) => rects.push({ id, r, q, k }));
+      rects.sort((a, b) => a.q[0] + a.q[1] + (a.q[2] + a.q[3]) / 2 - (b.q[0] + b.q[1] + (b.q[2] + b.q[3]) / 2));
+      for (const { r, q: [x, y, w, h], k } of rects) {
+        const P = (px, py, pz) => iso(px, py, z + pz).map(f1).join(","), A = P(x, y, 0), B = P(x + w, y, 0), C = P(x + w, y + h, 0), D = P(x, y + h, 0), a = P(x, y, WH), b = P(x + w, y, WH), c = P(x + w, y + h, WH), d = P(x, y + h, WH);
+        geo += `<polygon points="${A} ${B} ${C} ${D}" class="hfloor"/><polygon points="${A} ${B} ${b} ${a}" class="hwall back"/><polygon points="${A} ${D} ${d} ${a}" class="hwall back"/><polygon points="${B} ${C} ${c} ${b}" class="hwall front"/><polygon points="${D} ${C} ${c} ${d}" class="hwall front"/><polygon points="${a} ${b} ${c} ${d}" class="hedge"/>`;
+        if (!k) { const [lx, ly] = iso(x + w / 2, y, z + WH); labels += `<text x="${f1(lx)}" y="${f1(ly - 10 * sc)}" text-anchor="middle" class="hlab" font-size="${15 * sc}" opacity="${act}">${esc(r.name)}</text>`; }
+      }
+      geo += `</g>`;
+      let dv = "";
+      for (const n of toPlace) {
+        const q = L[i].placed[n.i]; if (!q) continue;
+        const [bx, by_] = iso(q[0], q[1], z), [tx, ty] = iso(q[0], q[1], z + STEM), r = (n.hub ? 18 : 11) * sc;
+        dv += `<ellipse cx="${f1(bx)}" cy="${f1(by_)}" rx="${f1(r * 0.9)}" ry="${f1(r * 0.45)}" fill="${this._col(n)}" opacity=".25"/><line x1="${f1(bx)}" y1="${f1(by_)}" x2="${f1(tx)}" y2="${f1(ty)}" stroke="${this._col(n)}" class="hstem" opacity=".7"/>${this._dot(n, +f1(tx), +f1(ty), r)}`;
+      }
+      devs += `<g opacity="${act}">${dv}</g>`;
+    });
+    for (const n of toPlace) {
+      if (n.hub || !by[n.p] || !pos[n.i]) continue;
+      const par = by[n.p], to = par.k === "radio" ? by[par.p] : par, a = top(n.i), b = to && top(to.i); if (!a || !b) continue;
+      links += this._link(b[0], b[1], a[0], a[1], n, by, false, Math.hypot(a[0] - b[0], a[1] - b[1]) * 0.22);
+    }
+    const all = tray;
+    const trayHtml = all.filter((n) => !n.hub || n.k !== "radio").sort((a, b) => a.n.localeCompare(b.n)).map((n) => `<div class="row" data-nm="${esc(n.i)}" data-act="nm" style="color:${this._col(n)}">${icon(n.k)}<span>${esc(n.n)}</span></div>`).join("");
+    const side = `<div class="side"><h4>Not placed · ${all.length}</h4>${trayHtml || `<div style="color:var(--nm-muted)">Everything has a spot.</div>`}<h4 style="margin-top:12px">Drag a dot onto the floor to move it</h4></div>`;
+    const m = 40;
+    return { lines: geo + links, dots: devs, texts: labels, vb: [minx - m, miny - 90, maxx - minx + 2 * m, maxy - miny + 90 + m], side, edit, holo: true };
+  }
   _roomsOnAny(a) { return !!this._S.plan.rooms[a]; }
   _areaPicker(f) {
     const have = new Set(this._roomsOn(f).map(([id]) => id)), opts = this._areaList().map((a) => `<option value="${esc(a.id)}"${this._pickArea === a.id ? " selected" : ""}>${esc(a.name)}${have.has(a.id) ? " ✓" : ""}</option>`).join("");
@@ -390,6 +452,7 @@ class NetworkMapCard extends HTMLElement {
     else if (a === "floor") this._floor = +d.v;
     else if (a === "edit") { this._edit = !this._edit; this._pickArea = null; }
     else if (a === "delroom") { delete this._S.plan.rooms[d.v]; this._save(); }
+    else if (a === "iso") { this._S.iso = d.v === "1"; this._save(); }
     else if (a === "areapick") return;
     else if (a === "img") { this._pickImage(); return; }
     else if (a === "sync") { const on = !this._syncOn(); if (!on || confirm("When you drop a device in a room on this map, also set that room as the device's area in Home Assistant?")) { this._S.syncAreas = on; this._save(); } }
@@ -429,13 +492,13 @@ class NetworkMapCard extends HTMLElement {
       const p = pt(ev), NS = "http://www.w3.org/2000/svg", sc = Math.max(...this._pdims) / 1000;
       if (!ghost) { ghost = document.createElementNS(NS, "circle"); ghost.setAttribute("r", 14 * sc); ghost.setAttribute("class", "ghost"); tag = document.createElementNS(NS, "text"); tag.setAttribute("class", "hubt"); tag.setAttribute("font-size", 15 * sc); svg.append(ghost, tag); this._hold = true; }
       ghost.setAttribute("cx", p.x); ghost.setAttribute("cy", p.y); tag.setAttribute("x", p.x + 20 * sc); tag.setAttribute("y", p.y + 5 * sc);
-      const a = this._roomAt(p.x, p.y); tag.textContent = a ? this._S.plan.rooms[a].name : "";
+      const q = this._inv ? this._inv(p) : p, a = this._roomAt(q.x, q.y); tag.textContent = a ? this._S.plan.rooms[a].name : "";
     };
     const up = (ev) => {
       window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
       if (!ghost) return; ghost.remove(); tag.remove(); this._hold = false;
       this._suppress = true; setTimeout(() => (this._suppress = false), 80);
-      if (ev.type === "pointerup") { const p = pt(ev), a = this._roomAt(p.x, p.y); if (a) { this._S.pos[id] = [Math.round(p.x), Math.round(p.y), this._floor]; this._S.rooms[id] = a; this._save(); this._syncArea(id, a); this._rebuild(); } }
+      if (ev.type === "pointerup") { const p0 = pt(ev), p = this._inv ? this._inv(p0) : p0, a = this._roomAt(p.x, p.y); if (a) { this._S.pos[id] = [Math.round(p.x), Math.round(p.y), this._floor]; this._S.rooms[id] = a; this._save(); this._syncArea(id, a); this._rebuild(); } }
       this._html = ""; this._draw();
     };
     window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
