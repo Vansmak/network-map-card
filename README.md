@@ -46,7 +46,13 @@ I have only tested this against TP-Link Deco on a real network. UniFi is based o
 
 **When the integration doesn't say**, devices hang off your router and you fix them in two taps: open a device, then **Move to an access point** or **Set to Ethernet / Wi-Fi**. The card remembers.
 
-**Floor plan** (House view only): any picture of your home (a sketch, a Roomba map screenshot, a real plan). Save it under `/config/www/` and point `floors[].image` at `/local/<file>`. No image gives a plain grid, and Rings works without a plan.
+**Floor plan** (House view only), all inside the card, no files to host:
+1. Open **House** → **Edit rooms** → **Add a floor plan image** and pick any picture of your home (a photo of a sketch, a Roomba map screenshot, a real plan). It is shrunk and saved with your settings.
+2. Choose a room from the dropdown (your HA areas) and drag a box over it on the picture. Repeat for each room; draw a second box for an L-shaped room.
+3. Click **Done editing rooms**. Devices in each HA area appear in their room; drag any dot to move it, and drag from the "Not placed" list to place the rest.
+4. More than one floor? **Add a floor**, give it a name, and give it its own image.
+
+No image works too: you get a plain grid, and Rings never needs a plan. (YAML `floors[].image` still works if you prefer to host the picture yourself.)
 
 Editing rooms and writing areas back to HA needs an admin user.
 

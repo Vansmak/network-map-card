@@ -3,7 +3,7 @@
  * Sonos / Lutron), a slideshow, and a House view on a floor plan YOU provide (your own image + rooms you draw).
  * Everything is worked out in the browser from device_tracker.* and the device registry: no add-on, no feed.
  * https://github.com/Vansmak/network-map-card */
-const VERSION = "0.2.0";
+const VERSION = "0.3.0";
 
 const ICONS = {"globe": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18\"/>", "wifi": "<path d=\"M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.7 16a5 5 0 0 1 6.6 0\"/><path d=\"M12 19.5v.01\"/>", "link": "<path d=\"M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1\"/><path d=\"M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1\"/>", "term": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M7 9l3 3-3 3M12 15h5\"/>", "tv": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M8 21h8\"/>", "speaker": "<rect x=\"6\" y=\"3\" width=\"12\" height=\"18\" rx=\"2\"/><circle cx=\"12\" cy=\"14\" r=\"3\"/><path d=\"M12 7v.01\"/>", "phone": "<path d=\"M5 4h3.5l1.8 4.5-2.3 1.4a11 11 0 0 0 6.1 6.1l1.4-2.3L20 15.5V19a1.5 1.5 0 0 1-1.6 1.5A16.5 16.5 0 0 1 3.5 5.6 1.5 1.5 0 0 1 5 4z\"/>", "xplay": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M10 8.5v5l4.5-2.5z\"/><path d=\"M8 21h8\"/>", "image": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><circle cx=\"8.5\" cy=\"9.5\" r=\"1.5\"/><path d=\"M21 16l-5-5-9 9\"/>", "cam": "<rect x=\"3\" y=\"7\" width=\"13\" height=\"10\" rx=\"2\"/><path d=\"M16 11l5-3v8l-5-3\"/>", "bot": "<circle cx=\"12\" cy=\"12\" r=\"8\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "temp": "<path d=\"M10 14V5a2 2 0 1 1 4 0v9a4 4 0 1 1-4 0z\"/>", "plug": "<path d=\"M9 2v6M15 2v6M6 8h12v3a6 6 0 0 1-12 0zM12 17v5\"/>", "gauge": "<path d=\"M4 18a8 8 0 1 1 16 0\"/><path d=\"M12 18l4-6\"/>", "bulb": "<path d=\"M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z\"/>", "lock": "<rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V8a4 4 0 0 1 8 0v3\"/>", "spark": "<path d=\"M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z\"/><path d=\"M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z\"/>", "more": "<circle cx=\"5\" cy=\"12\" r=\"1.5\"/><circle cx=\"12\" cy=\"12\" r=\"1.5\"/><circle cx=\"19\" cy=\"12\" r=\"1.5\"/>", "x": "<path d=\"M6 6l12 12M18 6L6 18\"/>"};
 const KI = { gateway: "globe", deco: "wifi", ap: "wifi", router: "link", server: "term", pi: "term", tv: "tv", speaker: "speaker", phone: "phone", pc: "term", console: "xplay", printer: "image", cam: "cam", vacuum: "bot", thermostat: "temp", plug: "plug", sensor: "gauge", light: "bulb", lock: "lock", radio: "spark", other: "more" };
@@ -301,7 +301,8 @@ class NetworkMapCard extends HTMLElement {
   }
 
   /* ---------- house view (your own floor plan) ---------- */
-  _floorCfg(i) { return this._cfg.floors[i] || this._cfg.floors[0]; }
+  _floors() { return this._S.plan.floors && this._S.plan.floors.length ? this._S.plan.floors : this._cfg.floors; }
+  _floorCfg(i) { const f = this._floors(); return f[i] || f[0]; }
   _roomsOn(f) { return Object.entries(this._S.plan.rooms).filter(([, r]) => (r.floor || 0) === f); }
   _dims(f) {
     const fl = this._floorCfg(f);
@@ -311,8 +312,8 @@ class NetworkMapCard extends HTMLElement {
   }
   _house(nodes, by) {
     const f = this._floor, [W, H] = this._dims(f), fl = this._floorCfg(f), rooms = this._roomsOn(f), S = this._S;
-    const tabs = this._cfg.floors.length > 1 ? `<span class="seg">${this._cfg.floors.map((x, i) => `<button class="b${i === f ? " on" : ""}" data-act="floor" data-v="${i}">${esc(x.name || "Floor " + (i + 1))}</button>`).join("")}</span>` : "";
-    const edit = `<div class="edit">${tabs}<button class="b${this._edit ? " on" : ""}" data-act="edit">${this._edit ? "Done editing rooms" : "Edit rooms"}</button>${this._edit ? `${this._areaPicker(f)}<span>${this._pickArea ? "Drag a box on the map for this room (repeat for L-shaped rooms)." : "Pick a room, then drag a box on the map."}</span>${rooms.map(([id, r]) => `<button class="b" data-act="delroom" data-v="${esc(id)}" title="Remove this room from the plan">${esc(r.name)} ✕</button>`).join("")}` : !rooms.length ? `<span>No rooms on this floor yet. Click “Edit rooms”, pick a room and drag a box over your floor plan.</span>` : ""}</div>`;
+    const tabs = this._floors().length > 1 ? `<span class="seg">${this._floors().map((x, i) => `<button class="b${i === f ? " on" : ""}" data-act="floor" data-v="${i}">${esc(x.name || "Floor " + (i + 1))}</button>`).join("")}</span>` : "";
+    const edit = `<div class="edit">${tabs}<button class="b${this._edit ? " on" : ""}" data-act="edit">${this._edit ? "Done editing rooms" : "Edit rooms"}</button>${this._edit ? `<button class="b" data-act="img">${fl.image ? "Change floor plan image" : "Add a floor plan image"}</button>${fl.image ? `<button class="b" data-act="noimg">Remove image</button>` : ""}<button class="b" data-act="addfloor">Add a floor</button>${this._areaPicker(f)}<span>${this._pickArea ? "Drag a box on the map for this room (repeat for L-shaped rooms)." : "Pick a room, then drag a box on the map."}</span>${rooms.map(([id, r]) => `<button class="b" data-act="delroom" data-v="${esc(id)}" title="Remove this room from the plan">${esc(r.name)} ✕</button>`).join("")}` : !rooms.length ? `<span>${fl.image ? "No rooms on this floor yet." : "No floor plan yet."} Click “Edit rooms”, add a picture of your home (a photo, sketch or screenshot), then pick a room and drag a box over it.</span>` : ""}</div>`;
     const inRoom = (x, y) => { const h = rooms.find(([, r]) => r.rects.some(([rx, ry, w, hh]) => x >= rx && x <= rx + w && y >= ry && y <= ry + hh)); return h ? h[0] : null; };
     this._roomAt = inRoom; this._pdims = [W, H];
     const placed = {}, tray = [];
@@ -350,6 +351,21 @@ class NetworkMapCard extends HTMLElement {
     const side = `<div class="side"><h4>Not placed · ${tray.length}</h4>${trayHtml || `<div style="color:var(--nm-muted)">Everything has a spot.</div>`}<h4 style="margin-top:12px">Drag a dot to move it</h4></div>`;
     return { lines: bg + lines, dots, texts: "", vb: [0, 0, W, H], side, edit };
   }
+  _setFloor(i, patch) { const fl = this._floors().map((x) => ({ ...x })); fl[i] = { ...fl[i], ...patch }; if (patch.image === "") { delete fl[i].image; delete fl[i].width; delete fl[i].height; } this._S.plan.floors = fl; this._save(); }
+  _pickImage() { // a picture from the user's device, shrunk and stored with their other settings (no file hosting needed)
+    const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
+    inp.onchange = () => {
+      const f = inp.files && inp.files[0]; if (!f) return;
+      const url = URL.createObjectURL(f), im = new Image();
+      im.onload = () => {
+        const k = Math.min(1, 1500 / Math.max(im.naturalWidth, im.naturalHeight)), w = Math.round(im.naturalWidth * k), h = Math.round(im.naturalHeight * k);
+        const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, w, h); x.drawImage(im, 0, 0, w, h);
+        URL.revokeObjectURL(url); this._setFloor(this._floor, { image: c.toDataURL("image/jpeg", 0.82), width: w, height: h }); this._html = ""; this._draw();
+      };
+      im.onerror = () => alert("Couldn't read that image."); im.src = url;
+    };
+    inp.click();
+  }
   _roomsOnAny(a) { return !!this._S.plan.rooms[a]; }
   _areaPicker(f) {
     const have = new Set(this._roomsOn(f).map(([id]) => id)), opts = this._areaList().map((a) => `<option value="${esc(a.id)}"${this._pickArea === a.id ? " selected" : ""}>${esc(a.name)}${have.has(a.id) ? " ✓" : ""}</option>`).join("");
@@ -369,6 +385,9 @@ class NetworkMapCard extends HTMLElement {
     else if (a === "edit") { this._edit = !this._edit; this._pickArea = null; }
     else if (a === "delroom") { delete this._S.plan.rooms[d.v]; this._save(); }
     else if (a === "areapick") return;
+    else if (a === "img") { this._pickImage(); return; }
+    else if (a === "noimg") { this._setFloor(this._floor, { image: "" }); }
+    else if (a === "addfloor") { const nm = prompt("Name for the new floor", "Upstairs"); if (nm && nm.trim()) { const fl = this._floors().map((x) => ({ ...x })); fl.push({ name: nm.trim().slice(0, 24) }); this._S.plan.floors = fl; this._floor = fl.length - 1; this._save(); } }
     else if (a === "show") { this._showT ? this._showStop() : this._showStart(); return; }
     else if (a === "sleep") { const n = this._nodes.find((x) => x.i === id); this._S.sleep[id] = n && n.sl ? 0 : 1; this._save(); this._rebuild(); }
     else if (a === "rename") { const n = this._nodes.find((x) => x.i === id), v = prompt("Name for this device", n ? n.n : ""); if (v && v.trim()) { this._S.names[id] = v.trim().slice(0, 40); this._save(); this._rebuild(); } }
@@ -435,7 +454,7 @@ class NetworkMapCard extends HTMLElement {
     const hubs = nodes.filter((n) => n.hub && n.k !== "gateway").sort((a, b) => (b.main || 0) - (a.main || 0) || a.n.localeCompare(b.n));
     const run = (v, hs, where, fl) => [...have.map((t) => ({ v, fl, f: null, t: [t], c: `${where} · ${LINK_NAME[t]} only` })), { v, fl, f: null, t: all, c: `${where} · everything` }, ...hs.map((h) => ({ v, fl, f: h.i, t: all, c: `${where} · ${h.n}` }))];
     const st = run("ring", hubs, "Rings", 0);
-    if (this.clientWidth >= 600 && Object.keys(this._S.plan.rooms).length) this._cfg.floors.forEach((fl, i) => st.push(...run("house", [], this._cfg.floors.length > 1 ? `House · ${fl.name || "floor " + (i + 1)}` : "House", i)));
+    if (this.clientWidth >= 600 && Object.keys(this._S.plan.rooms).length) this._floors().forEach((fl, i) => st.push(...run("house", [], this._floors().length > 1 ? `House · ${fl.name || "floor " + (i + 1)}` : "House", i)));
     return st;
   }
   _showStep() {
