@@ -14,6 +14,10 @@ A live map of every device on your network for Home Assistant. Nothing to run be
 
 ![Zoom](screenshots/zoom.png)
 
+## Looking for auto-discovery instead?
+
+If what you want is "find every device on my network, sweep the subnet, read my switches over SNMP and work out which access point each one is behind", use [NetOrbit](https://github.com/the-scott-davis/netorbit). It does that far better than this card, which only shows what Home Assistant already knows. This card is for a floor-plan view of your own house, Zigbee / Z-Wave / Lutron links, link-type filters and a plain card install with nothing scanning your network.
+
 ## Install (HACS)
 
 1. HACS → ⋮ → **Custom repositories** → add `https://github.com/Vansmak/network-map-card`, type **Dashboard** (Lovelace).
